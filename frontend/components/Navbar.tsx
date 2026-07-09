@@ -1,14 +1,25 @@
-export default function Navbar() {
-  return (
-    <header className="bg-white h-16 shadow flex items-center justify-between px-8">
-      <h1 className="text-2xl font-bold text-green-700">
-        Farm Report Dashboard
-      </h1>
+"use client";
 
-      <div className="flex items-center gap-6">
-        <span>🔔</span>
-        <span>👤 Admin</span>
-      </div>
-    </header>
+import { useRouter } from "next/navigation";
+
+export default function Navbar() {
+  const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    router.push("/login");
+  };
+
+  return (
+    <div className="flex justify-between items-center bg-white shadow px-6 py-4">
+      <h1 className="text-2xl font-bold">Farm Report System</h1>
+
+      <button
+        onClick={handleLogout}
+        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
+      >
+        Logout
+      </button>
+    </div>
   );
 }
