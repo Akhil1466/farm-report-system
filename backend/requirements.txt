@@ -1,8 +1,2 @@
-fastapi
-uvicorn
-pandas
-openpyxl
-python-multipart
-python-dotenv
-sqlalchemy
-psycopg2-binary
+cd /workspaces/farm-report-system/backend
+uvicorn app.main:app
