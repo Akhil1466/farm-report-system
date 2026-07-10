@@ -3,4 +3,6 @@ uvicorn
 pandas
 openpyxl
 python-multipart
-reportlab
+python-dotenv
+sqlalchemy
+psycopg2-binary
