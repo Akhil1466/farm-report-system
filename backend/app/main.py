@@ -7,12 +7,10 @@ from app.auth import get_current_user
 from sqlalchemy.orm import Session
 from app.security import hash_password, verify_password
 from app.jwt_handler import create_access_token
-from app.security import verify_password
 import pandas as pd
 import os
-
-from app.database import SessionLocal, engine
-from app.models import Base, User, Report
+from app.database import engine, SessionLocal
+from app.models import Base, User, Report, AuditLog
 from app.report1 import generate_report1
 
 # Create Tables
@@ -36,6 +34,16 @@ app.add_middleware(
 # -----------------------------
 # Database Dependency
 # -----------------------------
+def save_log(db: Session, username: str, action: str):
+    log = AuditLog(
+        username=username,
+        action=action,
+    )
+
+    db.add(log)
+    db.commit()
+
+
 def get_db():
     db = SessionLocal()
     try:
@@ -97,6 +105,7 @@ def login(
             "sub": user.username,
             "role": user.role,
             "id": user.id,
+            
         }
     )
 
@@ -133,11 +142,12 @@ async def upload_excel(
         new_report = Report(
             filename=file.filename,
             report_name="Report1.xlsx",
-            uploaded_by=1,
+            uploaded_by=current_user.id,
         )
 
         db.add(new_report)
         db.commit()
+        save_log(db, current_user.username, "Report Uploaded")
 
         return FileResponse(
             output_file,
@@ -260,6 +270,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
 
 # -----------------------------
 # Update User
+
 # -----------------------------
 @app.put("/users/{user_id}")
 def update_user(
@@ -269,6 +280,11 @@ def update_user(
 ):
 
     db_user = db.query(User).filter(User.id == user_id).first()
+    save_log(
+    db,
+    db_user.username,
+    "User Updated"
+)
 
     if not db_user:
         raise HTTPException(
@@ -281,6 +297,11 @@ def update_user(
     db_user.role = user.role
 
     db.commit()
+    save_log(
+        db,
+        db_user.username,
+        "User Updated"
+    )
 
     return {
         "message": "User updated successfully"
@@ -289,6 +310,35 @@ def update_user(
 
 # -----------------------------
 # Delete User
+@app.delete("/users/{user_id}")
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+
+    db_user = db.query(User).filter(User.id == user_id).first()
+
+    if not db_user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    # Username delete cheyyadaniki mundu save chesukovali
+    username = db_user.username
+
+    db.delete(db_user)
+    db.commit()
+
+    save_log(
+        db,
+        username,
+        "User Deleted"
+    )
+
+    return {
+        "message": "User deleted successfully"
+    }
 # -----------------------------
 @app.delete("/users/{user_id}")
 def delete_user(

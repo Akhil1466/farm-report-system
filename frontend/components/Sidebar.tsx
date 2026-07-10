@@ -1,12 +1,17 @@
 "use client";
-
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+
 
 const menu = [
   { name: "Dashboard", href: "/dashboard", icon: "🏠" },
   { name: "Upload", href: "/upload", icon: "📂" },
   { name: "Reports", href: "/reports", icon: "📑" },
+  {
+  name: "Profile",
+  href: "/profile",
+  icon: "👤",
+},
   { name: "History", href: "/history", icon: "📜" },
   { name: "Analytics", href: "/analytics", icon: "📈" },
   { name: "Users", href: "/users", icon: "👥" },
