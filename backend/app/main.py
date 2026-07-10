@@ -1,3 +1,4 @@
+from app.schemas import UserCreate, UserUpdate
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -148,6 +149,34 @@ def download():
 
 # -----------------------------
 # Get Users
+@app.post("/users")
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
+
+    existing = db.query(User).filter(
+        (User.username == user.username) |
+        (User.email == user.email)
+    ).first()
+
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="User already exists"
+        )
+
+    new_user = User(
+        username=user.username,
+        email=user.email,
+        password=user.password,
+        role=user.role
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return {
+        "message": "User created successfully"
+    }
 # -----------------------------
 @app.get("/users")
 def get_users(db: Session = Depends(get_db)):
@@ -159,6 +188,113 @@ def get_users(db: Session = Depends(get_db)):
 
 # -----------------------------
 # Get Reports
+# -----------------------------
+# Get Users
+# -----------------------------
+@app.get("/users")
+def get_users(db: Session = Depends(get_db)):
+
+    users = db.query(User).all()
+
+    return users
+
+
+# -----------------------------
+# Create User
+# -----------------------------
+@app.post("/users")
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
+
+    existing = db.query(User).filter(
+        (User.username == user.username) |
+        (User.email == user.email)
+    ).first()
+
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="User already exists"
+        )
+
+    new_user = User(
+        username=user.username,
+        email=user.email,
+        password=user.password,
+        role=user.role
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return {
+        "message": "User created successfully"
+    }
+
+
+# -----------------------------
+# Update User
+# -----------------------------
+@app.put("/users/{user_id}")
+def update_user(
+    user_id: int,
+    user: UserUpdate,
+    db: Session = Depends(get_db),
+):
+
+    db_user = db.query(User).filter(User.id == user_id).first()
+
+    if not db_user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    db_user.username = user.username
+    db_user.email = user.email
+    db_user.role = user.role
+
+    db.commit()
+
+    return {
+        "message": "User updated successfully"
+    }
+
+
+# -----------------------------
+# Delete User
+# -----------------------------
+@app.delete("/users/{user_id}")
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+
+    db_user = db.query(User).filter(User.id == user_id).first()
+
+    if not db_user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    db.delete(db_user)
+    db.commit()
+
+    return {
+        "message": "User deleted successfully"
+    }
+
+
+# -----------------------------
+# Get Reports
+# -----------------------------
+@app.get("/reports")
+def get_reports(db: Session = Depends(get_db)):
+
+    reports = db.query(Report).all()
+
+    return reports
 # -----------------------------
 @app.get("/reports")
 def get_reports(db: Session = Depends(get_db)):

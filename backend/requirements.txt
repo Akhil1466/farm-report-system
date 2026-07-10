@@ -4,5 +4,6 @@ pandas
 openpyxl
 python-multipart
 python-dotenv
-SQLAlchemy
+sqlalchemy
 psycopg2-binary
+email-validator
