@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+const API_URL = "https://farm-report-system.onrender.com";
+
 export default function UploadBox() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -14,40 +16,42 @@ export default function UploadBox() {
 
     setLoading(true);
 
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
-      const response = await fetch(
-        "https://farm-report-system.onrender.com/upload",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch(`${API_URL}/upload`, {
+        method: "POST",
+        body: formData,
+      });
 
       if (!response.ok) {
-        throw new Error("Upload failed");
+        const text = await response.text();
+        throw new Error(text);
       }
 
       const blob = await response.blob();
 
-      const url = window.URL.createObjectURL(blob);
+      const downloadUrl = window.URL.createObjectURL(blob);
 
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "Report1.xlsx";
-      a.click();
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = "Report1.xlsx";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
 
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(downloadUrl);
 
       alert("✅ Report Generated Successfully");
-    } catch (err) {
-      console.error(err);
-      alert("❌ Upload Failed");
-    }
 
-    setLoading(false);
+      setFile(null);
+    } catch (error) {
+      console.error(error);
+      alert("❌ Report Generation Failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -62,7 +66,7 @@ export default function UploadBox() {
         accept=".xlsx,.xls,.xlsm"
         className="w-full border rounded-lg p-3"
         onChange={(e) => {
-          if (e.target.files) {
+          if (e.target.files?.length) {
             setFile(e.target.files[0]);
           }
         }}
@@ -77,9 +81,9 @@ export default function UploadBox() {
       <button
         onClick={uploadFile}
         disabled={loading}
-        className="mt-6 bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-lg"
+        className="mt-6 bg-green-700 hover:bg-green-800 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg"
       >
-        {loading ? "Generating..." : "Generate Report"}
+        {loading ? "Generating Report..." : "Generate Report"}
       </button>
 
     </div>

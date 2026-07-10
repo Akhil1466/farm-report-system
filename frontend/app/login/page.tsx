@@ -11,11 +11,16 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const login = async () => {
+    if (!username || !password) {
+      alert("Enter Username and Password");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const response = await fetch(
-        "https://turbo-potato-v657646ggp99hp45q-8000.app.github.dev/login",
+        "https://farm-report-system-testing.onrender.com/login",
         {
           method: "POST",
           headers: {
@@ -39,8 +44,8 @@ export default function LoginPage() {
       } else {
         alert(data.detail);
       }
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
       alert("Backend connection failed.");
     }
 
@@ -50,6 +55,7 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
+
         <div className="text-center">
           <div className="text-6xl">🐔</div>
 
@@ -63,6 +69,7 @@ export default function LoginPage() {
         </div>
 
         <div className="mt-8">
+
           <input
             type="text"
             placeholder="Username"
@@ -86,7 +93,9 @@ export default function LoginPage() {
           >
             {loading ? "Logging in..." : "Login"}
           </button>
+
         </div>
+
       </div>
     </main>
   );
