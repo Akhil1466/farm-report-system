@@ -1,2 +1,8 @@
-cd /workspaces/farm-report-system/backend
-uvicorn app.main:app
+fastapi
+uvicorn
+pandas
+openpyxl
+python-multipart
+python-dotenv
+SQLAlchemy
+psycopg2-binary
