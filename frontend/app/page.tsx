@@ -24,7 +24,12 @@ export default function Dashboard() {
           </p>
 
           <div className="mt-8">
-            <DashboardCards />
+            <DashboardCards
+              totalUsers={1200}
+              totalReports={87}
+              activeUsers={230}
+              pendingReports={14}
+            />
           </div>
 
           <ReportTable />

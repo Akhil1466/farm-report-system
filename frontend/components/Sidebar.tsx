@@ -32,18 +32,18 @@ export default function Sidebar() {
       <div className="p-6 border-b border-green-700 flex items-center gap-3">
 
         <img
-          src="/logo.png"
-          alt="FarmTrack Logo"
+          src="/sneha-logo.png"
+          alt="SNEHA FARMS Logo"
           className="w-14 h-14 rounded-full bg-white p-2 shadow-lg"
         />
 
         <div>
           <h1 className="text-xl font-bold">
-            FarmTrack
+            Sneha Farms Limited
           </h1>
 
-          <p className="text-green-200 text-sm">
-            Technologies
+          <p className="text-Red-200 text-sm">
+            BIMS
           </p>
         </div>
 
