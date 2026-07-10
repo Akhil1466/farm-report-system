@@ -3,7 +3,11 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from app.auth import get_current_user
 from sqlalchemy.orm import Session
+from app.security import hash_password, verify_password
+from app.jwt_handler import create_access_token
+from app.security import verify_password
 import pandas as pd
 import os
 
@@ -82,15 +86,24 @@ def login(
             detail="Invalid Username or Password",
         )
 
-    if user.password != data.password:
+    if not verify_password(data.password, user.password):
         raise HTTPException(
             status_code=401,
             detail="Invalid Username or Password",
         )
 
+    token = create_access_token(
+        {
+            "sub": user.username,
+            "role": user.role,
+            "id": user.id,
+        }
+    )
+
     return {
         "success": True,
-        "token": "demo-token",
+        "access_token": token,
+        "token_type": "bearer",
         "username": user.username,
         "role": user.role,
     }
@@ -102,6 +115,7 @@ def login(
 @app.post("/upload")
 async def upload_excel(
     file: UploadFile = File(...),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     try:
@@ -178,7 +192,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     new_user = User(
         username=user.username,
         email=user.email,
-        password=user.password,
+        password=hash_password(user.password),
         role=user.role
     )
 
@@ -297,7 +311,20 @@ def delete_user(
         "message": "User deleted successfully"
     }
 
+@app.get("/users")
+def get_users(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    total_users = db.query(User).count()
+    total_reports = db.query(Report).count()
 
+    return {
+        "total_users": total_users,
+        "total_reports": total_reports,
+        "active_users": total_users,
+        "pending_reports": 0,
+    }
 # -----------------------------
 # Get Reports
 # -----------------------------
