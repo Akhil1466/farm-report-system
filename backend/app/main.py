@@ -68,20 +68,32 @@ def health():
 # Login
 # -----------------------------
 @app.post("/login")
-def login(data: LoginRequest):
+def login(
+    data: LoginRequest,
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).filter(
+        User.username == data.username
+    ).first()
 
-    if data.username == "admin" and data.password == "Admin@123":
-        return {
-            "success": True,
-            "token": "demo-token",
-            "username": "admin",
-            "role": "Admin",
-        }
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid Username or Password",
+        )
 
-    raise HTTPException(
-        status_code=401,
-        detail="Invalid Username or Password",
-    )
+    if user.password != data.password:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid Username or Password",
+        )
+
+    return {
+        "success": True,
+        "token": "demo-token",
+        "username": user.username,
+        "role": user.role,
+    }
 
 
 # -----------------------------
@@ -302,3 +314,18 @@ def get_reports(db: Session = Depends(get_db)):
     reports = db.query(Report).all()
 
     return reports
+# -----------------------------
+# Dashboard
+# -----------------------------
+@app.get("/dashboard")
+def dashboard(db: Session = Depends(get_db)):
+
+    total_users = db.query(User).count()
+    total_reports = db.query(Report).count()
+
+    return {
+        "total_users": total_users,
+        "total_reports": total_reports,
+        "active_users": total_users,
+        "pending_reports": 0
+    }
