@@ -24,8 +24,8 @@ app = FastAPI(title="Farm Report System API")
 # -----------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # Change later for production
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -84,38 +84,45 @@ def login(
     data: LoginRequest,
     db: Session = Depends(get_db),
 ):
-    user = db.query(User).filter(
-        User.username == data.username
-    ).first()
+    try:
+        user = db.query(User).filter(
+            User.username == data.username
+        ).first()
 
-    if not user:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid Username or Password",
+        if not user:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid Username or Password",
+            )
+
+        if not verify_password(data.password, user.password):
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid Username or Password",
+            )
+
+        token = create_access_token(
+            {
+                "sub": user.username,
+                "role": user.role,
+                "id": user.id,
+            }
         )
 
-    if not verify_password(data.password, user.password):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid Username or Password",
-        )
-
-    token = create_access_token(
-        {
-            "sub": user.username,
+        return {
+            "success": True,
+            "access_token": token,
+            "token_type": "bearer",
+            "username": user.username,
             "role": user.role,
-            "id": user.id,
-            
         }
-    )
 
-    return {
-        "success": True,
-        "access_token": token,
-        "token_type": "bearer",
-        "username": user.username,
-        "role": user.role,
-    }
+    except Exception as e:
+        print("LOGIN ERROR:", repr(e))   # <-- Add this line
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
+        )
 
 
 # -----------------------------
