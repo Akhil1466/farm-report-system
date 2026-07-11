@@ -7,6 +7,8 @@ export default function UploadPage() {
   const [loading, setLoading] = useState(false);
 
   const uploadFile = async () => {
+    alert("Upload function called");
+
     if (!file) {
       alert("Please select an Excel file");
       return;
@@ -18,18 +20,27 @@ export default function UploadPage() {
     setLoading(true);
 
     try {
+      const token = localStorage.getItem("token");
+
       const response = await fetch(
         "https://farm-report-system-testing.onrender.com/upload",
         {
           method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
           body: formData,
         }
       );
 
       if (!response.ok) {
-        alert("Upload Failed");
-        return;
-      }
+  const errorText = await response.text();
+  console.log("Status:", response.status);
+  console.log("Error:", errorText);
+
+  alert(`Upload Failed: ${response.status}`);
+  return;
+}
 
       const blob = await response.blob();
 

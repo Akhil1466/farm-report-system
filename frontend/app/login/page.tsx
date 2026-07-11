@@ -33,10 +33,14 @@ export default function LoginPage() {
         }
       );
 
-      const data = await response.json();
+      const text = await response.text();
+      console.log("Raw Response:", text);
+      const data = JSON.parse(text);
+      console.log("Response:", data);
+      console.log("Stored Token:", localStorage.getItem("token"));
 
       if (response.ok) {
-        localStorage.setItem("token", data.token);
+        localStorage.setItem("token", data.access_token);
         localStorage.setItem("username", data.username);
         localStorage.setItem("role", data.role);
 
@@ -45,11 +49,11 @@ export default function LoginPage() {
         alert(data.detail);
       }
     } catch (error) {
-      console.error(error);
+      console.error("ERROR:", error);
       alert("Backend connection failed.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
