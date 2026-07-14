@@ -19,20 +19,19 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(
-        "https://farm-report-system-testing.onrender.com/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username,
-            password,
-          }),
-        }
-      );
-
+     const response = await fetch(
+  `${process.env.NEXT_PUBLIC_API_URL}/login`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      username,
+      password,
+    }),
+  }
+);
       const text = await response.text();
       console.log("Raw Response:", text);
       const data = JSON.parse(text);

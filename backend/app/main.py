@@ -89,13 +89,22 @@ def login(
             User.username == data.username
         ).first()
 
+        print("Username entered:", data.username)
+
         if not user:
+            print("User not found")
             raise HTTPException(
                 status_code=401,
                 detail="Invalid Username or Password",
             )
 
-        if not verify_password(data.password, user.password):
+        print("DB Username:", user.username)
+        print("DB Password:", user.password)
+
+        result = verify_password(data.password, user.password)
+        print("Password Match:", result)
+
+        if not result:
             raise HTTPException(
                 status_code=401,
                 detail="Invalid Username or Password",
@@ -116,9 +125,8 @@ def login(
             "username": user.username,
             "role": user.role,
         }
-
     except Exception as e:
-        print("LOGIN ERROR:", repr(e))   # <-- Add this line
+        print("LOGIN ERROR:", repr(e))
         raise HTTPException(
             status_code=500,
             detail=str(e),
@@ -128,12 +136,53 @@ def login(
 # -----------------------------
 # Upload Excel
 # -----------------------------
-@app.post("/upload")
-async def upload_excel(
-    file: UploadFile = File(...),
-    current_user=Depends(get_current_user),
+@app.post("/login")
+def login(
+    data: LoginRequest,
     db: Session = Depends(get_db),
 ):
+    print("Entered Username:", data.username)
+
+    user = db.query(User).filter(
+        User.username == data.username
+    ).first()
+
+    print("User Found:", user)
+
+    if not user:
+        print("User not found!")
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid Username or Password",
+        )
+
+    print("Stored Password:", user.password)
+
+    result = verify_password(data.password, user.password)
+
+    print("Password Match:", result)
+
+    if not result:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid Username or Password",
+        )
+
+    token = create_access_token(
+        {
+            "sub": user.username,
+            "role": user.role,
+            "id": user.id,
+        }
+    )
+
+    return {
+        "success": True,
+        "access_token": token,
+        "token_type": "bearer",
+        "username": user.username,
+        "role": user.role,
+    }
     try:
 
         df = pd.read_excel(file.file)
@@ -190,36 +239,7 @@ def download():
     )
 
 
-# -----------------------------
-# Get Users
-@app.post("/users")
-def create_user(user: UserCreate, db: Session = Depends(get_db)):
-
-    existing = db.query(User).filter(
-        (User.username == user.username) |
-        (User.email == user.email)
-    ).first()
-
-    if existing:
-        raise HTTPException(
-            status_code=400,
-            detail="User already exists"
-        )
-
-    new_user = User(
-        username=user.username,
-        email=user.email,
-        password=hash_password(user.password),
-        role=user.role
-    )
-
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-
-    return {
-        "message": "User created successfully"
-    }
+# (Duplicate/erroneous user creation endpoint removed)
 # -----------------------------
 @app.get("/users")
 def get_users(db: Session = Depends(get_db)):
@@ -259,16 +279,23 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
             detail="User already exists"
         )
 
+    print("Creating user:", user.username, user.email, user.role)
+
     new_user = User(
         username=user.username,
         email=user.email,
-        password=user.password,
+        password=hash_password(user.password),
         role=user.role
     )
 
     db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    try:
+        db.commit()
+        db.refresh(new_user)
+    except Exception as e:
+        print("DATABASE ERROR:", e)
+        db.rollback()
+        raise
 
     return {
         "message": "User created successfully"
